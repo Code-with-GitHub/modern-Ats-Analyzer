@@ -9,24 +9,22 @@ import * as pdfjslib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 import mammoth from "mammoth";
 
-
-
 pdfjslib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // ==========================================
 // 🔗 AXIOS CONFIGURATION WITH TOKEN
 // ==========================================
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
   headers: {
-    'Content-Type': 'application/json',
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 // 🔥 NEW: Add token to every request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -42,13 +40,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/';
+      localStorage.removeItem("token");
+      window.location.href = "/";
     }
     return Promise.reject(error);
   }
 );
-function ResumeAnalyzerPage({ user, onLogout })  {
+function ResumeAnalyzerPage({ user, onLogout }) {
   // State management
   const [APIReady, setAPIReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,34 +59,33 @@ function ResumeAnalyzerPage({ user, onLogout })  {
   const [jobMatchResult, setJobMatchResult] = useState(null);
   const [showResults, setShowResults] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // ==========================================
   // ⚡ CHECK BACKEND API
   // ==========================================
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const response = await api.get('/api/health');
-        
-        if (response.data.status === 'ok') {
+        const response = await api.get("/api/health");
+
+        if (response.data.status === "ok") {
           setAPIReady(true);
           console.log(`✅ Backend ready: ${response.data.provider}`);
         }
       } catch (error) {
-        console.error('❌ Backend unavailable:', error.message);
+        console.error("❌ Backend unavailable:", error.message);
         setAPIReady(false);
       }
     };
-    
+
     checkBackend();
-    
+
     const interval = setInterval(() => {
       if (!APIReady) checkBackend();
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, [APIReady]);
-
 
   // ==========================================
   // 📄 PDF EXTRACTION
@@ -99,11 +96,13 @@ function ResumeAnalyzerPage({ user, onLogout })  {
       const pdf = await pdfjslib.getDocument({ data: arrayBuffer }).promise;
       const texts = await Promise.all(
         Array.from({ length: pdf.numPages }, (_, i) =>
-          pdf.getPage(i + 1).then((page) =>
-            page.getTextContent().then((tc) =>
-              tc.items.map((item) => item.str).join("  ")
+          pdf
+            .getPage(i + 1)
+            .then((page) =>
+              page
+                .getTextContent()
+                .then((tc) => tc.items.map((item) => item.str).join("  "))
             )
-          )
         )
       );
       return texts.join("\n").trim();
@@ -113,8 +112,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
     }
   };
 
-
- // ==========================================
+  // ==========================================
   // 📝 WORD EXTRACTION
   // ==========================================
   const extractWordText = async (file) => {
@@ -157,8 +155,6 @@ function ResumeAnalyzerPage({ user, onLogout })  {
     }
   }; */
 
- 
- 
   // ==========================================
   // 🤖 ANALYZE RESUME
   // ==========================================
@@ -170,7 +166,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
 
       console.log("📤 Calling backend API...");
 
-      const response = await api.post('/api/analyze-resume', {
+      const response = await api.post("/api/analyze-resume", {
         resumeText: text,
         prompt: constants.ANALYZE_RESUME_PROMPT,
       });
@@ -178,18 +174,19 @@ function ResumeAnalyzerPage({ user, onLogout })  {
       console.log("📥 Response:", response.data);
 
       if (!response.data.success) {
-        throw new Error(response.data.error || 'Analysis failed');
+        throw new Error(response.data.error || "Analysis failed");
       }
 
       return response.data.data;
-      
     } catch (error) {
       console.error("❌ Analysis error:", error);
-      
+
       if (error.response) {
-        throw new Error(error.response.data.error || 'Backend error');
+        throw new Error(error.response.data.error || "Backend error");
       } else if (error.request) {
-        throw new Error('Backend not responding. Check if server is running on port 5000.');
+        throw new Error(
+          "Backend not responding. Check if server is running on port 5000."
+        );
       } else {
         throw error;
       }
@@ -211,7 +208,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
 
       console.log("📤 Sending match request...");
 
-      const response = await api.post('/api/match-job', {
+      const response = await api.post("/api/match-job", {
         resumeText: resumeText,
         jobDescription: jobDesc,
         prompt: constants.JOB_MATCH_PROMPT,
@@ -220,27 +217,24 @@ function ResumeAnalyzerPage({ user, onLogout })  {
       console.log("📥 Match response:", response.data);
 
       if (!response.data.success) {
-        throw new Error(response.data.error || 'Match failed');
+        throw new Error(response.data.error || "Match failed");
       }
 
       return response.data.data;
-      
     } catch (error) {
       console.error("❌ Match error:", error);
-      
+
       if (error.response) {
-        throw new Error(error.response.data.error || 'Backend error');
+        throw new Error(error.response.data.error || "Backend error");
       } else if (error.request) {
-        throw new Error('Backend not responding');
+        throw new Error("Backend not responding");
       } else {
         throw error;
       }
     }
   };
 
-
-
-// ==========================================
+  // ==========================================
   // 🆕 PROCESS FILE/HANDEL FILE Functon
   // ==========================================
   const processFile = async (file) => {
@@ -270,8 +264,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
     setPresenceChecklist([]);
     setJobMatchResult(null);
     setShowResults(false);
-    
-    
+
     try {
       let text = "";
 
@@ -364,8 +357,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
     }
   };
 
-
-   // ==========================================
+  // ==========================================
   // 🔄 RESET
   // ==========================================
   const reset = () => {
@@ -377,26 +369,36 @@ function ResumeAnalyzerPage({ user, onLogout })  {
     setShowResults(false);
   };
 
-// ==========================================
+  // ==========================================
   // 🎨 HELPER FUNCTIONS
   // ==========================================
   const getMatchLevelColor = (level) => {
     switch (level) {
-      case "excellent": return "text-green-400";
-      case "good": return "text-blue-400";
-      case "fair": return "text-yellow-400";
-      case "poor": return "text-red-400";
-      default: return "text-gray-400";
+      case "excellent":
+        return "text-green-400";
+      case "good":
+        return "text-blue-400";
+      case "fair":
+        return "text-yellow-400";
+      case "poor":
+        return "text-red-400";
+      default:
+        return "text-gray-400";
     }
   };
 
   const getMatchLevelEmoji = (level) => {
     switch (level) {
-      case "excellent": return "🎉";
-      case "good": return "👍";
-      case "fair": return "⚠️";
-      case "poor": return "❌";
-      default: return "❓";
+      case "excellent":
+        return "🎉";
+      case "good":
+        return "👍";
+      case "fair":
+        return "⚠️";
+      case "poor":
+        return "❌";
+      default:
+        return "❓";
     }
   };
 
@@ -416,17 +418,13 @@ function ResumeAnalyzerPage({ user, onLogout })  {
     return "bg-red-500/80";
   };
 
-
-
   // ==========================================
   // 🖼️ JSX RENDER
   // ==========================================
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto w-full">
-
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-block bg-gradient-to-br from-cyan-400 to-cyan-300 px-8 py-3 mb-4 rounded-lg">
@@ -439,7 +437,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
           </p>
         </div>
 
-       {/* BACKEND STATUS */}
+        {/* BACKEND STATUS */}
 
         {!APIReady && (
           <div className="text-center mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
@@ -447,49 +445,50 @@ function ResumeAnalyzerPage({ user, onLogout })  {
               ⏳ Connecting to backend... (Port 5000)
             </p>
             <p className="text-yellow-300 text-sm mt-2">
-              Make sure your backend server is running: <code>node server.js</code>
+              Make sure your backend server is running:{" "}
+              <code>node server.js</code>
             </p>
           </div>
         )}
 
-
         {/* MODE SELECTOR */}
-        
-          <div className="flex justify-center gap-4 mb-8">
-            <button
-              onClick={() => {setMode("analyzer");
-                reset();
-              }}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+
+        <div className="flex justify-center gap-4 mb-8">
+          <button
+            onClick={() => {
+              setMode("analyzer");
+              reset();
+            }}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
               mode === "analyzer"
                 ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg"
                 : "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
-              }`}
-            >
-              📊 Resume Analyzer
-            </button>
+            }`}
+          >
+            📊 Resume Analyzer
+          </button>
 
-            {/* Matcher Button */}
-            <button
-              onClick={() => {setMode("matcher");reset();}}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+          {/* Matcher Button */}
+          <button
+            onClick={() => {
+              setMode("matcher");
+              reset();
+            }}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
               mode === "matcher"
                 ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg"
                 : "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
-              }`}
-            >
-              🎯 Job Matcher
-
-            </button>
-
-          </div>
-        
+            }`}
+          >
+            🎯 Job Matcher
+          </button>
+        </div>
 
         {/* JOB DESCRIPTION INPUT (Matcher Mode Only) */}
-        {mode === "matcher" && !showResults &&  (
+        {mode === "matcher" && !showResults && (
           <div className="bg-slate-800/80 border border-cyan-600/50 rounded-xl p-6 mb-6">
             <h3 className="text-xl font-bold text-white mb-3">
-              📝 Enter  Job Description
+              📝 Enter Job Description
             </h3>
 
             <textarea
@@ -505,30 +504,26 @@ function ResumeAnalyzerPage({ user, onLogout })  {
           </div>
         )}
 
-        
-
-          {/* File Upload Section/ /* UPLOAD AREA  */}
-
-        {!showResults && (
-          <div className={`bg-slate-800/60 border-2 border-dashed border-cyan-600/50 rounded-xl p-12 text-center hover:border-cyan-500 transition-all shadow-lg shadow-cyan-900/20 ${
+        {/* File Upload Section/ /* UPLOAD AREA  */}
+        {/* UPLOAD AREA - Hide when loading or showing results */}
+        {!showResults && !isLoading && (
+          <div
+            className={`bg-slate-800/60 border-2 border-dashed border-cyan-600/50 rounded-xl p-12 text-center hover:border-cyan-500 transition-all shadow-lg shadow-cyan-900/20 ${
               isDragging ? "border-cyan-400 bg-cyan-500/10" : ""
             }`}
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            >
-          
+          >
             <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
-             <span className="text-4xl">📄</span>
+              <span className="text-4xl">📄</span>
             </div>
             <h3 className="text-2xl text-gray-200 mb-2">Upload Your Resume</h3>
             <p className=" text-lg text-gray-400 mb-6">
-
               PDF or Word documents (.doc, .docx) supported
             </p>
 
-            {/* choose file button */}
             <input
               type="file"
               accept=".pdf,.docx"
@@ -539,44 +534,76 @@ function ResumeAnalyzerPage({ user, onLogout })  {
             />
             <label
               htmlFor="file-upload"
-              className= "inline-flex items-center justify-center px-8 py-3 text-lg font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl cursor-pointer hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl cursor-pointer hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
               Choose File
-
             </label>
 
             {!APIReady && (
-                <p className="text-red-400 mt-4 font-semibold">
-                  ⚠️ Backend not ready. Please start your server.
-                </p>
-              )}
-
+              <p className="text-red-400 mt-4 font-semibold">
+                ⚠️ Backend not ready. Please start your server.
+              </p>
+            )}
           </div>
-          
         )}
-        
-        {/* LOADING STATE */}
+
+        {/* LOADING STATE - Full screen centered, replaces upload area */}
         {isLoading && (
-          
-          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-cyan-600/30 rounded-xl p-12 text-center">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-cyan-600/30 rounded-xl p-12 min-h-[500px] flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center space-y-6">
+              {/* Animated spinning circle with logo */}
+              <div className="relative w-24 h-24">
+                <div className="absolute inset-0 border-4 border-dashed rounded-full animate-spin border-cyan-400"></div>
 
-            <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                <div className="absolute inset-3 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                    <svg
+                      className="w-8 h-8 text-cyan-400"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M12 3v18"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
 
-            <h3 className="text-2xl text-white mb-3 font-bold">
-              Analyzing Resume
-            </h3>
-            
-            <p className="text-gray-300">
-              Please wait while AI reviews your resume...
-            </p>
+              <h3 className="text-2xl sm:text-3xl text-white font-bold">
+                Analyzing Your Resume...
+              </h3>
+
+              <p className="text-gray-300 text-base sm:text-lg max-w-md leading-relaxed text-center">
+                Our AI is working its magic, comparing your resume against the
+                job description to find key strengths and areas for improvement.
+              </p>
+            </div>
           </div>
         )}
-
 
         {/* Resume Analysis Results after uploading file amd loading screen main dashboard  */}
         {showResults && mode === "analyzer" && Analysis && (
           <div className="space-y-6">
-
             {/* File Info */}
             <div className="file-info-card flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -594,7 +621,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
                 Upload New
               </button>
             </div>
-            
+
             {/* Overall Score Card - Matching screenshot design */}
             <div className="bg-gradient-to-br from-teal-900/60 via-blue-900/60 to-indigo-900/60 border border-slate-700 rounded-2xl p-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
@@ -881,9 +908,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
         {/* Job Match Results */}
         {showResults && mode === "matcher" && jobMatchResult && (
           <div className="space-y-6">
-
-
-           {/* File Info */}
+            {/* File Info */}
             <div className="file-info-card flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-4xl">📄</span>
@@ -900,7 +925,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
                 Try Another
               </button>
             </div>
-            
+
             {/* Match Score Card */}
             <div className="bg-gradient-to-br from-teal-900/60 via-blue-900/60 to-indigo-900/60 border border-slate-700 rounded-2xl p-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
@@ -1117,4 +1142,4 @@ function ResumeAnalyzerPage({ user, onLogout })  {
   );
 }
 
-export default ResumeAnalyzerPage
+export default ResumeAnalyzerPage;
