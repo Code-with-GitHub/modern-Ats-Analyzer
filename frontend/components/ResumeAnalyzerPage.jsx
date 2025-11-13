@@ -485,7 +485,8 @@ function ResumeAnalyzerPage({ user, onLogout }) {
         </div>
 
         {/* JOB DESCRIPTION INPUT (Matcher Mode Only) */}
-        {mode === "matcher" && !showResults && (
+        {/* JOB DESCRIPTION INPUT (Matcher Mode Only) - Hide when loading */}
+        {mode === "matcher" && !showResults && !isLoading && (
           <div className="bg-slate-800/80 border border-cyan-600/50 rounded-xl p-6 mb-6">
             <h3 className="text-xl font-bold text-white mb-3">
               📝 Enter Job Description
@@ -503,6 +504,7 @@ function ResumeAnalyzerPage({ user, onLogout }) {
             </p>
           </div>
         )}
+        
 
         {/* File Upload Section/ /* UPLOAD AREA  */}
         {/* UPLOAD AREA - Hide when loading or showing results */}
