@@ -505,7 +505,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
           </div>
         )}
 
-        {/* File Upload Section/ /* UPLOAD AREA  */}
+        
 
           {/* File Upload Section/ /* UPLOAD AREA  */}
 
@@ -881,6 +881,26 @@ function ResumeAnalyzerPage({ user, onLogout })  {
         {/* Job Match Results */}
         {showResults && mode === "matcher" && jobMatchResult && (
           <div className="space-y-6">
+
+
+           {/* File Info */}
+            <div className="file-info-card flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-4xl">📄</span>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">
+                    {uploadedFile?.name}
+                  </h3>
+                  <p className="text-slate-400 text-sm">
+                    Matched against job description
+                  </p>
+                </div>
+              </div>
+              <button onClick={reset} className="btn-secondary">
+                Try Another
+              </button>
+            </div>
+            
             {/* Match Score Card */}
             <div className="bg-gradient-to-br from-teal-900/60 via-blue-900/60 to-indigo-900/60 border border-slate-700 rounded-2xl p-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
