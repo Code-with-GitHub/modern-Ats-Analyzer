@@ -17,7 +17,7 @@ pdfjslib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 // 📗 AXIOS CONFIGURATION
 // ==========================================
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ||'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL ||'http://localhost:5000',
   headers: {
     'Content-Type': 'application/json',
   }
@@ -482,6 +482,8 @@ function ResumeAnalyzerPage({ user, onLogout })  {
 
         {/* File Upload Section/ /* UPLOAD AREA  */}
 
+          {/* File Upload Section/ /* UPLOAD AREA  */}
+
         {!showResults && (
           <div className={`bg-slate-800/60 border-2 border-dashed border-cyan-600/50 rounded-xl p-12 text-center hover:border-cyan-500 transition-all shadow-lg shadow-cyan-900/20 ${
               isDragging ? "border-cyan-400 bg-cyan-500/10" : ""
@@ -512,7 +514,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
             />
             <label
               htmlFor="file-upload"
-              className= "btn-primary inline-block"
+              className= "inline-flex items-center justify-center px-8 py-3 text-lg font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl cursor-pointer hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
               Choose File
 
@@ -527,6 +529,7 @@ function ResumeAnalyzerPage({ user, onLogout })  {
           </div>
           
         )}
+        
         {/* LOADING STATE */}
         {isLoading && (
           
