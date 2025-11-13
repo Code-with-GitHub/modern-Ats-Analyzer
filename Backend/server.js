@@ -85,34 +85,34 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 let aiClient;
 let geminiModel;
 
-if (AI_PROVIDER === 'openai') {
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('❌ ERROR: OPENAI_API_KEY not found in .env file');
-    process.exit(1);
-  }
+// if (AI_PROVIDER === 'openai') {
+//   if (!process.env.OPENAI_API_KEY) {
+//     console.error('❌ ERROR: OPENAI_API_KEY not found in .env file');
+//     process.exit(1);
+//   }
 
-  aiClient = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+//   aiClient = new OpenAI({
+//     apiKey: process.env.OPENAI_API_KEY,
+//   });
 
-  console.log('✅ OpenAI client initialized');
-}
+//   console.log('✅ OpenAI client initialized');
+// }
 
-if (AI_PROVIDER === 'openrouter') {
-  if (!process.env.OPENROUTER_API_KEY) {
-    console.error('❌ ERROR: OPENROUTER_API_KEY not found');
-    process.exit(1);
-  }
-  aiClient = new OpenAI({
-    apiKey: process.env.OPENROUTER_API_KEY,
-    baseURL: 'https://openrouter.ai/api/v1',
-    defaultHeaders: {
-      'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:5173',
-      'X-Title': 'ATS Resume Optimizer',
-    },
-  });
-  console.log('✅ OpenRouter client initialized');
-}
+// if (AI_PROVIDER === 'openrouter') {
+//   if (!process.env.OPENROUTER_API_KEY) {
+//     console.error('❌ ERROR: OPENROUTER_API_KEY not found');
+//     process.exit(1);
+//   }
+//   aiClient = new OpenAI({
+//     apiKey: process.env.OPENROUTER_API_KEY,
+//     baseURL: 'https://openrouter.ai/api/v1',
+//     defaultHeaders: {
+//       'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:5173',
+//       'X-Title': 'ATS Resume Optimizer',
+//     },
+//   });
+//   console.log('✅ OpenRouter client initialized');
+// }
 
 if (AI_PROVIDER === 'gemini') {
   if (!process.env.GEMINI_API_KEY) {
