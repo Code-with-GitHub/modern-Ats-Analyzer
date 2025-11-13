@@ -2,8 +2,8 @@ import React, { useState, useCallback } from 'react';
 import { AuthState } from './types';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
-import ResumeAnalyzerPage from './components/ResumeAnalyzerPage';
 import LandingPage from './components/LandingPage';
+import ResumeAnalyzerPage from './components/ResumeAnalyzerPage.jsx'
 
 const App: React.FC = () => {
   const [authState, setAuthState] = useState<AuthState>(AuthState.LOGGED_OUT);

@@ -1,0 +1,6 @@
+    // myComponent.d.ts
+    declare module './componets/ResumeAnalyzerPage.jsx' {
+      import React from 'react';
+      const MyComponent: React.FC; // Or define specific props if applicable
+      export default ResumeAnalyzerPage;
+    }
