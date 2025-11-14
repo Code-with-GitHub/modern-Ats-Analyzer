@@ -5,8 +5,8 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import User from './User.js';
-import { protect } from './authmiddleware.js';
+import User from '../models/User.js';
+import { protect } from '../middleware/authmiddleware.js';
 
 const router = express.Router();
 
