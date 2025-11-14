@@ -223,6 +223,11 @@ async function callAI(systemPrompt, userPrompt) {
 // ==========================================
 // 🔗 ROUTES
 // ==========================================
+//welcome 1st rout
+
+app.get('/', (req, res) => {
+  res.send(" Server running and API Working");
+});
 
 // Auth routes
 app.use('/api/auth', authRoutes);
