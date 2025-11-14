@@ -13,10 +13,10 @@ import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Import custom modules
-import connectDB from './db.js';
-import authRoutes from './auth.js';
-import User from './User.js';
-import { protect } from './authmiddleware.js';
+import connectDB from './config/db.js';
+import authRoutes from './routes/auth.js';
+import User from './models/User.js';
+import { protect } from './middleware/authmiddleware.js';
 
 dotenv.config();
 
