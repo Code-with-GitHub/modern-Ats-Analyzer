@@ -20,7 +20,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSwitchToSignup }) => {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -45,12 +45,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSwitchToSignup }) => {
 
   // Google login button onClick
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google';
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  window.location.href = `${apiUrl}/api/auth/google`;
   };
 
   // GitHub login button onClick
   const handleGithubLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/github';
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  window.location.href = `${apiUrl}/api/auth/github`;
   };
   
   return (

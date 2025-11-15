@@ -23,7 +23,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -54,12 +54,14 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
 
   // Google signup button onClick
   const handleGoogleSignup = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google';
-  };
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  window.location.href = `${apiUrl}/api/auth/google`;
+};
 
   // GitHub signup button onClick
   const handleGithubSignup = () => {
-    window.location.href = 'http://localhost:5000/api/auth/github';
+     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    window.location.href = `${apiUrl}/api/auth/github`;
   };
 
   const inputClass = "appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100";
