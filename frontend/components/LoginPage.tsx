@@ -15,34 +15,34 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSwitchToSignup }) => {
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  
+  try {
+    // ✅ FIXED - Change to login endpoint
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password })
+    });
     
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        localStorage.setItem('token', data.token);
-        onLogin(data.user.firstName || data.user.email);
-      } else {
-        setError(data.error || 'Login failed. Please try again.');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Network error. Please check your connection.');
-    } finally {
-      setLoading(false);
+    const data = await response.json();
+    
+    if (data.success) {
+      localStorage.setItem('token', data.token);
+      onLogin(data.user.firstName || data.user.email);
+    } else {
+      setError(data.error || 'Login failed. Please try again.');
     }
-  };
-
+  } catch (error) {
+    console.error('Login error:', error);
+    setError('Network error. Please check your connection.');
+  } finally {
+    setLoading(false);
+  }
+};
   // Google login button onClick
   const handleGoogleLogin = () => {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
