@@ -9,12 +9,12 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import OpenAI from 'openai';
+//import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Import custom modules
 import connectDB from './config/db.js';
-import authRoutes from './routes/auth.js';
+import router from './routes/auth.js';;
 import User from './models/User.js';
 import { protect } from './middleware/authmiddleware.js';
 
@@ -230,7 +230,7 @@ app.get('/', (req, res) => {
 });
 
 // Auth routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', router);
 
 // ==========================================
 // 📝 ROUTE: ANALYZE RESUME (Protected)
