@@ -5,12 +5,11 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'Build complete'"
   },
-  "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/genai": "^1.30.0",
     "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^2.2.0",
@@ -19,12 +18,9 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
-    "generative-ai": "^0.1.4",
-    "google": "^2.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^7.0.0",
     "mongoose": "^8.20.0",
-    "openai": "^6.8.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
   }
