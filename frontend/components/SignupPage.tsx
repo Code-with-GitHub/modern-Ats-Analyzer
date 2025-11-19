@@ -23,7 +23,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
     setError('');
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      const response = await fetch(`${process.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -54,13 +54,13 @@ const SignupPage: React.FC<SignupPageProps> = ({ onSignup, onSwitchToLogin }) =>
 
   // Google signup button onClick
   const handleGoogleSignup = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
   window.location.href = `${apiUrl}/api/auth/google`;
 };
 
   // GitHub signup button onClick
   const handleGithubSignup = () => {
-     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+     const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000'
     window.location.href = `${apiUrl}/api/auth/github`;
   };
 

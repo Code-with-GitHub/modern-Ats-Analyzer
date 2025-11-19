@@ -8,14 +8,19 @@ import constants, {
 import * as pdfjslib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 import mammoth from "mammoth";
+import { UploadIcon } from './icons';
 
+// The Vite-specific '?url' import for the worker script is not compatible with the browser's import map.
+// Instead, we directly provide the CDN URL for the worker script.
+// The version is based on the import map in index.html.
 pdfjslib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 
 // ==========================================
 // 🔗 AXIOS CONFIGURATION WITH TOKEN
 // ==========================================
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+  baseURL: process.env.VITE_API_URL || "http://localhost:5000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -59,6 +64,28 @@ function ResumeAnalyzerPage({ user, onLogout }) {
   const [jobMatchResult, setJobMatchResult] = useState(null);
   const [showResults, setShowResults] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [loadingText, setLoadingText] = useState("Analyzing your document...");
+
+  const loadingMessages = [
+    "Scanning for keywords...",
+    "Evaluating content quality...",
+    "Checking ATS compatibility...",
+    "Analyzing formatting and structure...",
+    "Almost there..."
+  ];
+
+  useEffect(() => {
+    let interval;
+    if (isLoading) {
+      let i = 0;
+      interval = setInterval(() => {
+        setLoadingText(loadingMessages[i]);
+        i = (i + 1) % loadingMessages.length;
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
 
   // ==========================================
   // ⚡ CHECK BACKEND API
@@ -125,36 +152,7 @@ function ResumeAnalyzerPage({ user, onLogout }) {
       throw new Error(`Word extraction failed: ${error.message}`);
     }
   };
-
-  // Parse JSON response from AI
-
-  /* const parseJsonResponse = (reply) => {
-    try {
-      if (!reply) {
-        throw new Error("Empty response from AI");
-      }
-
-      console.log("AI Response:", reply);
-
-      const match = reply.match(/\{[\s\S]*\}/);
-      if (!match) {
-        throw new Error("No JSON found in AI response");
-      }
-
-      const parsed = JSON.parse(match[0]);
-
-      if (!parsed.overallScore && !parsed.matchPercentage && !parsed.error) {
-        throw new Error("Invalid AI response format - missing required fields");
-      }
-
-      return parsed;
-    } catch (err) {
-      console.error("Parse error:", err);
-      console.error("Original reply:", reply);
-      throw new Error(`Failed to parse AI response: ${err.message}`);
-    }
-  }; */
-
+  
   // ==========================================
   // 🤖 ANALYZE RESUME
   // ==========================================
@@ -245,10 +243,11 @@ function ResumeAnalyzerPage({ user, onLogout }) {
     const allowedTypes = [
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      alert("Please upload PDF or Word (.docx) only");
+      alert("Please upload PDF or Word (.doc, .docx) only");
       return;
     }
 
@@ -425,7 +424,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto w-full">
-        {/* Header */}
         {/* Header - Sticky Top Navigation */}
         <header className="sticky top-0 z-10 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700/80 mb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -503,8 +501,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
           </div>
         )}
 
-        {/* BACKEND STATUS */}
-
         {!APIReady && (
           <div className="text-center mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
             <p className="text-yellow-400 font-semibold">
@@ -516,8 +512,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
             </p>
           </div>
         )}
-
-        {/* MODE SELECTOR */}
 
         <div className="flex justify-center gap-4 mb-8">
           <button
@@ -534,7 +528,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
             📊 Resume Analyzer
           </button>
 
-          {/* Matcher Button */}
           <button
             onClick={() => {
               setMode("matcher");
@@ -550,7 +543,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
           </button>
         </div>
 
-        {/* JOB DESCRIPTION INPUT (Matcher Mode Only) - Hide when loading */}
         {mode === "matcher" && !showResults && !isLoading && (
           <div className="bg-slate-800/80 border border-cyan-600/50 rounded-xl p-6 mb-6">
             <h3 className="text-xl font-bold text-white mb-3">
@@ -570,8 +562,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
           </div>
         )}
 
-        {/* File Upload Section/ /* UPLOAD AREA  */}
-        {/* UPLOAD AREA - Hide when loading or showing results */}
         {!showResults && !isLoading && (
           <div
             className={`bg-slate-800/60 border-2 border-dashed border-cyan-600/50 rounded-xl p-12 text-center hover:border-cyan-500 transition-all shadow-lg shadow-cyan-900/20 ${
@@ -582,29 +572,27 @@ function ResumeAnalyzerPage({ user, onLogout }) {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center">
-              <span className="text-4xl">📄</span>
-            </div>
-            <h3 className="text-2xl text-gray-200 mb-2">Upload Your Resume</h3>
+            <UploadIcon className="h-12 w-12 text-cyan-500 mx-auto mb-4" />
+            <h3 className="text-2xl text-gray-200 mb-2 font-semibold">Drop your resume here</h3>
             <p className=" text-lg text-gray-400 mb-6">
-              PDF or Word documents (.doc, .docx) supported
+              or <span className="text-cyan-400 font-semibold">browse files</span>. PDF or Word supported.
             </p>
 
             <input
               type="file"
-              accept=".pdf,.docx"
+              accept=".pdf,.docx,.doc"
               onChange={handleFileUpload}
               disabled={!APIReady || isLoading}
               className="hidden"
               id="file-upload"
             />
-            <label
+             <label
               htmlFor="file-upload"
-              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl cursor-pointer hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl cursor-pointer hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
+              disabled={!APIReady || isLoading}
             >
               Choose File
             </label>
-
             {!APIReady && (
               <p className="text-red-400 mt-4 font-semibold">
                 ⚠️ Backend not ready. Please start your server.
@@ -613,64 +601,38 @@ function ResumeAnalyzerPage({ user, onLogout }) {
           </div>
         )}
 
-        {/* LOADING STATE - Full screen centered, replaces upload area */}
         {isLoading && (
           <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-cyan-600/30 rounded-xl p-12 min-h-[500px] flex items-center justify-center">
             <div className="flex flex-col items-center justify-center space-y-6">
-              {/* Animated spinning circle with logo */}
               <div className="relative w-24 h-24">
                 <div className="absolute inset-0 border-4 border-dashed rounded-full animate-spin border-cyan-400"></div>
-
                 <div className="absolute inset-3 flex items-center justify-center">
                   <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
                     <svg
-                      className="w-8 h-8 text-cyan-400"
+                      className="w-8 h-8 text-cyan-400 animate-pulse"
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      <path
-                        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M12 3v18"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 3v18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                 </div>
               </div>
-
               <h3 className="text-2xl sm:text-3xl text-white font-bold">
-                Analyzing Your Resume...
+                AI is Analyzing...
               </h3>
-
-              <p className="text-gray-300 text-base sm:text-lg max-w-md leading-relaxed text-center">
-                Our AI is working its magic, comparing your resume against the
-                job description to find key strengths and areas for improvement.
+              <p className="text-cyan-300 text-base sm:text-lg max-w-md leading-relaxed text-center transition-opacity duration-500">
+                {loadingText}
               </p>
             </div>
           </div>
         )}
 
-        {/* Resume Analysis Results after uploading file amd loading screen main dashboard  */}
         {showResults && mode === "analyzer" && Analysis && (
           <div className="space-y-6">
-            {/* File Info */}
             <div className="file-info-card flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-4xl">📄</span>
@@ -688,7 +650,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </button>
             </div>
 
-            {/* Overall Score Card - Matching screenshot design */}
             <div className="bg-gradient-to-br from-teal-900/60 via-blue-900/60 to-indigo-900/60 border border-slate-700 rounded-2xl p-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="text-4xl">🏆</span>
@@ -716,9 +677,7 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </p>
             </div>
 
-            {/* Top Strengths & Main Improvements - Side by side */}
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Top Strengths */}
               <div className="bg-gradient-to-br from-teal-900/50 to-teal-800/50 border border-teal-700/50 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-3xl">💪</span>
@@ -743,7 +702,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
                 </div>
               </div>
 
-              {/* Main Improvements */}
               <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/50 border border-orange-700/50 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-3xl">⚡</span>
@@ -769,7 +727,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Executive Summary */}
             <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-3xl">📋</span>
@@ -782,7 +739,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </p>
             </div>
 
-            {/* Performance Metrics */}
             <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-8">
                 <span className="text-3xl">📊</span>
@@ -820,7 +776,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Resume Insights */}
             <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-8">
                 <span className="text-3xl">🔍</span>
@@ -829,7 +784,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
                 </h3>
               </div>
 
-              {/* Action Items */}
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-2xl">🎯</span>
@@ -852,7 +806,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
                 </div>
               </div>
 
-              {/* Pro Tips */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-2xl">💡</span>
@@ -876,7 +829,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* ATS Optimization */}
             <div className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50 border border-purple-700/50 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-8">
                 <span className="text-3xl">🤖</span>
@@ -885,7 +837,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
                 </h3>
               </div>
 
-              {/* What is ATS? */}
               <div className="bg-indigo-900/60 border border-indigo-700/50 rounded-xl p-5 mb-8">
                 <h4 className="text-xl font-bold text-white mb-3">
                   What is ATS?
@@ -903,7 +854,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
                 </p>
               </div>
 
-              {/* ATS Compatibility Checklist */}
               <div>
                 <div className="flex items-center gap-3 mb-5">
                   <span className="text-2xl">🤖</span>
@@ -931,7 +881,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Recommended Keywords */}
             <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-3xl">🔑</span>
@@ -959,7 +908,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Reset Button */}
             <div className="text-center pt-4">
               <button
                 onClick={reset}
@@ -971,10 +919,8 @@ function ResumeAnalyzerPage({ user, onLogout }) {
           </div>
         )}
 
-        {/* Job Match Results */}
         {showResults && mode === "matcher" && jobMatchResult && (
           <div className="space-y-6">
-            {/* File Info */}
             <div className="file-info-card flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-4xl">📄</span>
@@ -992,7 +938,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </button>
             </div>
 
-            {/* Match Score Card */}
             <div className="bg-gradient-to-br from-teal-900/60 via-blue-900/60 to-indigo-900/60 border border-slate-700 rounded-2xl p-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="text-4xl">
@@ -1015,7 +960,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </p>
             </div>
 
-            {/* NEW: Executive Summary Section */}
             <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-3xl">📋</span>
@@ -1029,7 +973,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </p>
             </div>
 
-            {/* Matching & Missing Skills */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-gradient-to-br from-green-900/50 to-green-800/50 border border-green-700/50 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-6">
@@ -1076,7 +1019,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Match Breakdown */}
             <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-8">
                 <span className="text-3xl">📊</span>
@@ -1090,12 +1032,10 @@ function ResumeAnalyzerPage({ user, onLogout }) {
                     jobMatchResult.detailedBreakdown?.[metric.key] ||
                     metric.defaultValue;
 
-                  // FIX: If the value is greater than 10, it means AI returned it out of 100, so divide by 10
                   if (value > 10) {
                     value = Math.round(value / 10);
                   }
 
-                  // Ensure value is between 1-10
                   value = Math.max(1, Math.min(10, value));
 
                   return (
@@ -1123,7 +1063,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Strengths & Weaknesses for This Job */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-gradient-to-br from-teal-900/50 to-teal-800/50 border border-teal-700/50 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-6">
@@ -1171,7 +1110,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Recommendations */}
             <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-3xl">💡</span>
@@ -1192,7 +1130,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Reset Button */}
             <div className="text-center pt-4">
               <button
                 onClick={reset}

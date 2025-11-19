@@ -23,11 +23,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSwitchToSignup }) => {
     console.log('📤 Attempting login with:', { 
       email, 
       passwordLength: password.length,
-      apiUrl: import.meta.env.VITE_API_URL 
+      apiUrl: process.env.VITE_API_URL 
     });
     
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
       
       // 🔥 FIX: Make sure we're sending clean data
       const loginData = {
@@ -69,13 +69,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSwitchToSignup }) => {
 
   // Google login button onClick
   const handleGoogleLogin = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
     window.location.href = `${apiUrl}/api/auth/google`;
   };
 
   // GitHub login button onClick
   const handleGithubLogin = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.VITE_API_URL || 'http://localhost:5000';
     window.location.href = `${apiUrl}/api/auth/github`;
   };
   
