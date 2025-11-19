@@ -1,12 +1,11 @@
 // ============================================
-// 🚀 RESUME OPTIMIZER BACKEND WITH AUTH
+// 🚀 RESUME OPTIMIZER BACKEND WITH AUTH (VERCEL OPTIMIZED)
 // ============================================
 
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import session from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
@@ -48,42 +47,18 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Session middleware (required for Passport)
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    },
-  })
-);
+// ❌ REMOVED: Session middleware (not needed for JWT-based auth)
+// Vercel serverless functions don't work well with sessions
+// We're using JWT tokens stored in cookies instead
 
-// Initialize Passport
+// Initialize Passport (without session)
 app.use(passport.initialize());
-app.use(passport.session());
 
 // ==========================================
 // 🔐 PASSPORT CONFIGURATION
 // ==========================================
 
-// Passport serialize/deserialize
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (error) {
-    done(error, null);
-  }
-});
+// ❌ REMOVED: Passport serialize/deserialize (not needed for stateless JWT auth)
 
 // Google Strategy
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -126,6 +101,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       }
     )
   );
+} else {
+  console.warn('⚠️ Google OAuth credentials not configured');
 }
 
 // GitHub Strategy
@@ -172,6 +149,8 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
       }
     )
   );
+} else {
+  console.warn('⚠️ GitHub OAuth credentials not configured');
 }
 
 // ==========================================
@@ -255,7 +234,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // ==========================================
-// 📝 ROUTE: ANALYZE RESUME (Protected)
+// 🔍 ROUTE: ANALYZE RESUME (Protected)
 // ==========================================
 
 app.post('/api/analyze-resume', protect, async (req, res) => {
@@ -416,16 +395,21 @@ app.use((err, req, res, next) => {
 });
 
 // ==========================================
-// 🚀 START SERVER
+// 🚀 START SERVER (Only in development)
 // ==========================================
 
-app.listen(PORT, () => {
-  console.log('🚀=================================🚀');
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🤖 Using AI Provider: ${AI_PROVIDER.toUpperCase()}`);
-  console.log(`🗄️ MongoDB connected`);
-  console.log(
-    `🌐 Frontend allowed from: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`
-  );
-  console.log('🚀=================================🚀');
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log('🚀=================================🚀');
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`🤖 Using AI Provider: ${AI_PROVIDER.toUpperCase()}`);
+    console.log(`🗄️ MongoDB connected`);
+    console.log(
+      `🌐 Frontend allowed from: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`
+    );
+    console.log('🚀=================================🚀');
+  });
+}
+
+// Export for Vercel
+export default app;
