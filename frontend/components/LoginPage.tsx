@@ -14,46 +14,69 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSwitchToSignup }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
- 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
-  
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const response = await fetch(`${apiUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password })
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    // 🔥 ADD CONSOLE LOGS FOR DEBUGGING
+    console.log('📤 Attempting login with:', { 
+      email, 
+      passwordLength: password.length,
+      apiUrl: import.meta.env.VITE_API_URL 
     });
     
-    const data = await response.json();
-    
-    if (data.success) {
-      localStorage.setItem('token', data.token);
-      onLogin(data.user.firstName || data.user.email);
-    } else {
-      setError(data.error || 'Login failed. Please try again.');
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
+      // 🔥 FIX: Make sure we're sending clean data
+      const loginData = {
+        email: email.trim().toLowerCase(),
+        password: password // Don't trim password - spaces might be intentional
+      };
+
+      console.log('📤 Sending login request to:', `${apiUrl}/api/auth/login`);
+      
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(loginData)
+      });
+      
+      console.log('📥 Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('📥 Response data:', data);
+      
+      if (data.success) {
+        console.log('✅ Login successful!');
+        localStorage.setItem('token', data.token);
+        onLogin(data.user.firstName || data.user.email);
+      } else {
+        console.log('❌ Login failed:', data.error);
+        setError(data.error || 'Login failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Login error:', error);
-    setError('Network error. Please check your connection.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
   // Google login button onClick
   const handleGoogleLogin = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  window.location.href = `${apiUrl}/api/auth/google`;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    window.location.href = `${apiUrl}/api/auth/google`;
   };
 
   // GitHub login button onClick
   const handleGithubLogin = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  window.location.href = `${apiUrl}/api/auth/github`;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    window.location.href = `${apiUrl}/api/auth/github`;
   };
   
   return (
