@@ -1,5 +1,5 @@
 // ============================================
-// 🔒 AUTHENTICATION ROUTES (VERCEL OPTIMIZED)
+// 🔐 AUTHENTICATION ROUTES (FIXED LOGIN)
 // ============================================
 
 import express from 'express';
@@ -34,6 +34,8 @@ router.post('/register', async (req, res) => {
   try {
     const { firstName, lastName, username, email, password } = req.body;
 
+    console.log('📝 Registration attempt:', { email, username });
+
     // Validation
     if (!email || !password) {
       return res.status(400).json({
@@ -52,6 +54,7 @@ router.post('/register', async (req, res) => {
     // Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('❌ Email already exists:', email);
       return res.status(400).json({
         success: false,
         error: 'User already exists with this email',
@@ -62,6 +65,7 @@ router.post('/register', async (req, res) => {
     if (username) {
       const existingUsername = await User.findOne({ username });
       if (existingUsername) {
+        console.log('❌ Username already taken:', username);
         return res.status(400).json({
           success: false,
           error: 'Username already taken',
@@ -78,6 +82,8 @@ router.post('/register', async (req, res) => {
       password,
       provider: 'local',
     });
+
+    console.log('✅ User created successfully:', email);
 
     // Generate token
     const token = generateToken(user._id);
@@ -99,7 +105,7 @@ router.post('/register', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Register error:', error);
+    console.error('❌ Register error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Server error during registration',
@@ -108,7 +114,7 @@ router.post('/register', async (req, res) => {
 });
 
 // ==========================================
-// 🔑 LOGIN USER
+// 🔑 LOGIN USER (FIXED)
 // ==========================================
 router.post('/login', async (req, res) => {
   try {
@@ -124,7 +130,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Find user (include password for comparison)
+    // Find user and EXPLICITLY select password field
     const user = await User.findOne({ email }).select('+password');
     
     if (!user) {
@@ -135,16 +141,37 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    console.log('🔍 User found:', {
+      email: user.email,
+      provider: user.provider,
+      hasPassword: !!user.password,
+      passwordLength: user.password ? user.password.length : 0
+    });
+
     // Check if user registered with OAuth
-    if (user.provider !== 'local' && !user.password) {
+    if (user.provider !== 'local') {
+      console.log('⚠️ OAuth user attempting local login');
+      if (!user.password) {
+        return res.status(401).json({
+          success: false,
+          error: `This account was created with ${user.provider}. Please use ${user.provider} login.`,
+        });
+      }
+    }
+
+    // Check if password exists
+    if (!user.password) {
+      console.log('❌ No password set for user:', email);
       return res.status(401).json({
         success: false,
-        error: `This account was created with ${user.provider}. Please use ${user.provider} login.`,
+        error: 'Invalid credentials',
       });
     }
 
     // Verify password
+    console.log('🔐 Comparing passwords...');
     const isMatch = await user.comparePassword(password);
+    console.log('🔐 Password match result:', isMatch);
     
     if (!isMatch) {
       console.log('❌ Invalid password for:', email);
@@ -176,7 +203,7 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Server error during login',
@@ -226,10 +253,9 @@ router.get('/me', protect, async (req, res) => {
 });
 
 // ==========================================
-// 🌐 GOOGLE OAUTH - ADD ERROR HANDLING
+// 🌐 GOOGLE OAUTH
 // ==========================================
 router.get('/google', (req, res, next) => {
-  // Check if Google OAuth is configured
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     console.error('❌ Google OAuth not configured');
     return res.status(500).json({
@@ -271,10 +297,9 @@ router.get('/google/callback', (req, res, next) => {
 });
 
 // ==========================================
-// 🐙 GITHUB OAUTH - ADD ERROR HANDLING
+// 🐙 GITHUB OAUTH
 // ==========================================
 router.get('/github', (req, res, next) => {
-  // Check if GitHub OAuth is configured
   if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
     console.error('❌ GitHub OAuth not configured');
     return res.status(500).json({
