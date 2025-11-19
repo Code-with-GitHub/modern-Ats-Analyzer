@@ -1,5 +1,5 @@
 // ============================================
-// 🔒 AUTHENTICATION ROUTES (FIXED)
+// 🔒 AUTHENTICATION ROUTES (VERCEL OPTIMIZED)
 // ============================================
 
 import express from 'express';
@@ -114,7 +114,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('📥 Login attempt:', { email });
+    console.log('🔥 Login attempt:', { email });
 
     // Validation
     if (!email || !password) {
@@ -226,55 +226,93 @@ router.get('/me', protect, async (req, res) => {
 });
 
 // ==========================================
-// 🌐 GOOGLE OAUTH
+// 🌐 GOOGLE OAUTH - ADD ERROR HANDLING
 // ==========================================
-router.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+router.get('/google', (req, res, next) => {
+  // Check if Google OAuth is configured
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.error('❌ Google OAuth not configured');
+    return res.status(500).json({
+      success: false,
+      error: 'Google OAuth is not configured on the server'
+    });
+  }
 
-router.get(
-  '/google/callback',
+  passport.authenticate('google', { 
+    scope: ['profile', 'email'],
+    session: false 
+  })(req, res, next);
+});
+
+router.get('/google/callback', (req, res, next) => {
   passport.authenticate('google', {
-    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
     session: false,
-  }),
-  (req, res) => {
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
+  }, (err, user) => {
+    if (err) {
+      console.error('Google callback error:', err);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
+    }
+    
+    if (!user) {
+      console.error('No user returned from Google');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=no_user`);
+    }
+
     try {
-      const token = generateToken(req.user._id);
+      const token = generateToken(user._id);
       setTokenCookie(res, token);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}?token=${token}`);
     } catch (error) {
-      console.error('Google callback error:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`);
+      console.error('Token generation error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=token_failed`);
     }
+  })(req, res, next);
+});
+
+// ==========================================
+// 🐙 GITHUB OAUTH - ADD ERROR HANDLING
+// ==========================================
+router.get('/github', (req, res, next) => {
+  // Check if GitHub OAuth is configured
+  if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
+    console.error('❌ GitHub OAuth not configured');
+    return res.status(500).json({
+      success: false,
+      error: 'GitHub OAuth is not configured on the server'
+    });
   }
-);
 
-// ==========================================
-// 🐙 GITHUB OAUTH
-// ==========================================
-router.get(
-  '/github',
-  passport.authenticate('github', { scope: ['user:email'] })
-);
+  passport.authenticate('github', { 
+    scope: ['user:email'],
+    session: false 
+  })(req, res, next);
+});
 
-router.get(
-  '/github/callback',
+router.get('/github/callback', (req, res, next) => {
   passport.authenticate('github', {
-    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
     session: false,
-  }),
-  (req, res) => {
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
+  }, (err, user) => {
+    if (err) {
+      console.error('GitHub callback error:', err);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=github_auth_failed`);
+    }
+    
+    if (!user) {
+      console.error('No user returned from GitHub');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=no_user`);
+    }
+
     try {
-      const token = generateToken(req.user._id);
+      const token = generateToken(user._id);
       setTokenCookie(res, token);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}?token=${token}`);
     } catch (error) {
-      console.error('GitHub callback error:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`);
+      console.error('Token generation error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=token_failed`);
     }
-  }
-);
+  })(req, res, next);
+});
 
 export default router;
