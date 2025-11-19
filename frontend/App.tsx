@@ -1,37 +1,33 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { AuthState } from './types';
-import LoginPage from './components/LoginPage';
-import SignupPage from './components/SignupPage';
-import LandingPage from './components/LandingPage';
+import { AuthState } from './types.js';
+import LoginPage from './components/LoginPage.js';
+import SignupPage from './components/SignupPage.js';
+import LandingPage from './components/LandingPage.js';
 import ResumeAnalyzerPage from './components/ResumeAnalyzerPage.jsx';
+// Router removed - child components handle their own routing
 
 const App: React.FC = () => {
   const [authState, setAuthState] = useState<AuthState>(AuthState.LOGGED_OUT);
   const [user, setUser] = useState<{ name: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 NEW: Check for token in URL (OAuth redirect) or localStorage
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check URL for token (from OAuth redirect)
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('token');
 
         if (tokenFromUrl) {
           console.log('✅ Token found in URL');
           localStorage.setItem('token', tokenFromUrl);
-          // Remove token from URL
           window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        // Check localStorage for existing token
         const token = localStorage.getItem('token');
 
         if (token) {
           console.log('✅ Token found, fetching user data...');
           
-          // Verify token and get user info
           const response = await fetch('http://localhost:5000/api/auth/me', {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -84,7 +80,6 @@ const App: React.FC = () => {
     setAuthState(AuthState.SIGNUP);
   }, []);
 
-  // Show loading while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -109,6 +104,8 @@ const App: React.FC = () => {
       case AuthState.LOGGED_OUT:
       default:
         return <LandingPage 
+          user={user}
+          onLogout={handleLogout}
           onGetStarted={handleGetStarted}
           onLogin={handleSwitchToLogin}
           onSignup={handleSwitchToSignup}
@@ -116,11 +113,7 @@ const App: React.FC = () => {
     }
   };
 
-  return (
-    <>
-      {renderContent()}
-    </>
-  );
+  return renderContent();
 };
 
 export default App;

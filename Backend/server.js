@@ -156,7 +156,7 @@ app.use(
   })
 );
 
-// Initialize Passport
+// Initialize Passport 
 app.use(passport.initialize());
 app.use(passport.session());
 

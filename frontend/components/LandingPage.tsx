@@ -6,6 +6,8 @@ interface LandingPageProps {
     onGetStarted: () => void;
     onLogin: () => void;
     onSignup: () => void;
+    user: { name: string } | null;
+    onLogout: () => void;
 }
 
 const features = [

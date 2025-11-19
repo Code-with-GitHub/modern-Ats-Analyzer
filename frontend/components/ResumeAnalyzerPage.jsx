@@ -426,16 +426,82 @@ function ResumeAnalyzerPage({ user, onLogout }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto w-full">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-block bg-gradient-to-br from-cyan-400 to-cyan-300 px-8 py-3 mb-4 rounded-lg">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black tracking-tight">
-              ATS RESUME OPTIMIZER
-            </h1>
+        {/* Header - Sticky Top Navigation */}
+        <header className="sticky top-0 z-10 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700/80 mb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              {/* Logo and Title */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <span className="text-xl font-bold text-white">
+                  ATS Analyzer
+                </span>
+              </div>
+
+              {/* User Info and Logout */}
+              <div className="flex items-center gap-4">
+                {user && (
+                  <>
+                    <span className="text-white font-medium hidden sm:inline">
+                      Hello, {user.name}
+                    </span>
+                    <button
+                      onClick={onLogout}
+                      className="px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      Logout
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-          <p className="text-gray-300 text-base">
-            Analyze your resume or match it with a job description
-          </p>
-        </div>
+        </header>
+
+        {/* Page Title Section - Only show when not loading and no results */}
+        {!showResults && !isLoading && (
+          <div className="text-center mb-10">
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <svg
+                  className="w-10 h-10 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
+                ATS RESUME ANALYZER
+              </h1>
+            </div>
+            <p className="text-gray-300 text-base max-w-2xl mx-auto">
+              Analyze your resume or match it with a job description
+            </p>
+          </div>
+        )}
 
         {/* BACKEND STATUS */}
 
@@ -484,7 +550,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
           </button>
         </div>
 
-        {/* JOB DESCRIPTION INPUT (Matcher Mode Only) */}
         {/* JOB DESCRIPTION INPUT (Matcher Mode Only) - Hide when loading */}
         {mode === "matcher" && !showResults && !isLoading && (
           <div className="bg-slate-800/80 border border-cyan-600/50 rounded-xl p-6 mb-6">
@@ -504,7 +569,6 @@ function ResumeAnalyzerPage({ user, onLogout }) {
             </p>
           </div>
         )}
-        
 
         {/* File Upload Section/ /* UPLOAD AREA  */}
         {/* UPLOAD AREA - Hide when loading or showing results */}
