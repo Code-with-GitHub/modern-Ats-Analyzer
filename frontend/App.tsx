@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { AuthState } from './types.js';
+import { AuthState } from './types';
 import LoginPage from './components/LoginPage.js';
-import SignupPage from './components/SignupPage.js';
-import LandingPage from './components/LandingPage.js';
+import SignupPage from './components/SignupPage'
+import LandingPage from './components/LandingPage';
 import ResumeAnalyzerPage from './components/ResumeAnalyzerPage.jsx';
 // Router removed - child components handle their own routing
 
@@ -113,7 +113,11 @@ const App: React.FC = () => {
     }
   };
 
-  return renderContent();
+   return (
+    <>
+      {renderContent()}
+    </>
+  );
 };
 
 export default App;

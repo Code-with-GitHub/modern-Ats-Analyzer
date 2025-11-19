@@ -1,5 +1,5 @@
 // ============================================
-// 🔑 AUTHENTICATION ROUTES
+// 🔒 AUTHENTICATION ROUTES (FIXED)
 // ============================================
 
 import express from 'express';
@@ -17,11 +17,24 @@ const generateToken = (userId) => {
   });
 };
 
-// Register User
+// Set token cookie
+const setTokenCookie = (res, token) => {
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  });
+};
+
+// ==========================================
+// 📝 REGISTER USER
+// ==========================================
 router.post('/register', async (req, res) => {
   try {
     const { firstName, lastName, username, email, password } = req.body;
 
+    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -29,6 +42,14 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 6 characters',
+      });
+    }
+
+    // Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -37,23 +58,34 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    // Check username if provided
+    if (username) {
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        return res.status(400).json({
+          success: false,
+          error: 'Username already taken',
+        });
+      }
+    }
+
+    // Create user
     const user = await User.create({
-      firstName,
-      lastName,
-      username,
+      firstName: firstName || '',
+      lastName: lastName || '',
+      username: username || email.split('@')[0],
       email,
       password,
       provider: 'local',
     });
 
+    // Generate token
     const token = generateToken(user._id);
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    // Set cookie
+    setTokenCookie(res, token);
 
+    // Send response
     res.status(201).json({
       success: true,
       token,
@@ -70,16 +102,21 @@ router.post('/register', async (req, res) => {
     console.error('Register error:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error during registration',
+      error: error.message || 'Server error during registration',
     });
   }
 });
 
-// Login User
+// ==========================================
+// 🔑 LOGIN USER
+// ==========================================
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('📥 Login attempt:', { email });
+
+    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -87,30 +124,45 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    // Find user (include password for comparison)
+    const user = await User.findOne({ email }).select('+password');
+    
     if (!user) {
+      console.log('❌ User not found:', email);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
       });
     }
 
+    // Check if user registered with OAuth
+    if (user.provider !== 'local' && !user.password) {
+      return res.status(401).json({
+        success: false,
+        error: `This account was created with ${user.provider}. Please use ${user.provider} login.`,
+      });
+    }
+
+    // Verify password
     const isMatch = await user.comparePassword(password);
+    
     if (!isMatch) {
+      console.log('❌ Invalid password for:', email);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
       });
     }
 
+    // Generate token
     const token = generateToken(user._id);
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    // Set cookie
+    setTokenCookie(res, token);
 
+    console.log('✅ Login successful:', email);
+
+    // Send response
     res.json({
       success: true,
       token,
@@ -127,12 +179,14 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error during login',
+      error: error.message || 'Server error during login',
     });
   }
 });
 
-// Logout
+// ==========================================
+// 🚪 LOGOUT
+// ==========================================
 router.post('/logout', (req, res) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 1 * 1000),
@@ -145,51 +199,81 @@ router.post('/logout', (req, res) => {
   });
 });
 
-// Get Current User
+// ==========================================
+// 👤 GET CURRENT USER
+// ==========================================
 router.get('/me', protect, async (req, res) => {
-  res.json({
-    success: true,
-    user: {
-      id: req.user._id,
-      firstName: req.user.firstName,
-      lastName: req.user.lastName,
-      username: req.user.username,
-      email: req.user.email,
-      avatar: req.user.avatar,
-      provider: req.user.provider,
-    },
-  });
+  try {
+    res.json({
+      success: true,
+      user: {
+        id: req.user._id,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        username: req.user.username,
+        email: req.user.email,
+        avatar: req.user.avatar,
+        provider: req.user.provider,
+      },
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get user data',
+    });
+  }
 });
 
-// Google OAuth
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// ==========================================
+// 🌐 GOOGLE OAUTH
+// ==========================================
+router.get(
+  '/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
 
-router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/login`, session: false }),
+router.get(
+  '/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
+    session: false,
+  }),
   (req, res) => {
-    const token = generateToken(req.user._id);
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-    res.redirect(`${process.env.FRONTEND_URL}?token=${token}`);
+    try {
+      const token = generateToken(req.user._id);
+      setTokenCookie(res, token);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}?token=${token}`);
+    } catch (error) {
+      console.error('Google callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`);
+    }
   }
 );
 
-// GitHub OAuth
-router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+// ==========================================
+// 🐙 GITHUB OAUTH
+// ==========================================
+router.get(
+  '/github',
+  passport.authenticate('github', { scope: ['user:email'] })
+);
 
-router.get('/github/callback',
-  passport.authenticate('github', { failureRedirect: `${process.env.FRONTEND_URL}/login`, session: false }),
+router.get(
+  '/github/callback',
+  passport.authenticate('github', {
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`,
+    session: false,
+  }),
   (req, res) => {
-    const token = generateToken(req.user._id);
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-    res.redirect(`${process.env.FRONTEND_URL}?token=${token}`);
+    try {
+      const token = generateToken(req.user._id);
+      setTokenCookie(res, token);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}?token=${token}`);
+    } catch (error) {
+      console.error('GitHub callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`);
+    }
   }
 );
 
