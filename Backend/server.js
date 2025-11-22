@@ -9,21 +9,20 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-// import OpenAI from 'openai';
-import { GoogleGenAI } from '@google/genai';
+//import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Import custom modules
 import connectDB from './config/db.js';
-import router from './routes/auth.js';
+import router from './routes/auth.js';;
 import User from './models/User.js';
 import { protect } from './middleware/authmiddleware.js';
-import bodyParser from 'body-parser';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini';
+const AI_PROVIDER = process.env.AI_PROVIDER || 'openai';
 
 // ==========================================
 // 🗄️ CONNECT TO DATABASE
@@ -84,17 +83,47 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 // ==========================================
 
 let aiClient;
+let geminiModel;
+
+// if (AI_PROVIDER === 'openai') {
+//   if (!process.env.OPENAI_API_KEY) {
+//     console.error('❌ ERROR: OPENAI_API_KEY not found in .env file');
+//     process.exit(1);
+//   }
+
+//   aiClient = new OpenAI({
+//     apiKey: process.env.OPENAI_API_KEY,
+//   });
+
+//   console.log('✅ OpenAI client initialized');
+// }
+
+// if (AI_PROVIDER === 'openrouter') {
+//   if (!process.env.OPENROUTER_API_KEY) {
+//     console.error('❌ ERROR: OPENROUTER_API_KEY not found');
+//     process.exit(1);
+//   }
+//   aiClient = new OpenAI({
+//     apiKey: process.env.OPENROUTER_API_KEY,
+//     baseURL: 'https://openrouter.ai/api/v1',
+//     defaultHeaders: {
+//       'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:5173',
+//       'X-Title': 'ATS Resume Optimizer',
+//     },
+//   });
+//   console.log('✅ OpenRouter client initialized');
+// }
 
 if (AI_PROVIDER === 'gemini') {
-  // Fix: Use API_KEY as per Gemini API guidelines.
-  if (!process.env.API_KEY) {
-    // Fix: Update error message to reflect the change to API_KEY.
-    console.error('❌ ERROR: API_KEY not found in .env file');
+  if (!process.env.GEMINI_API_KEY) {
+    console.error('❌ ERROR: GEMINI_API_KEY not found in .env file');
     process.exit(1);
   }
 
-  // Fix: Use API_KEY for initialization as per guidelines.
-  aiClient = new GoogleGenAI({apiKey: process.env.API_KEY});
+  aiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  geminiModel = aiClient.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+  });
 
   console.log('✅ Gemini client initialized');
 }
@@ -102,8 +131,6 @@ if (AI_PROVIDER === 'gemini') {
 // ==========================================
 // 🛡️ MIDDLEWARE
 // ==========================================
-
-app.use(bodyParser.json());
 
 app.use(
   cors({
@@ -129,7 +156,7 @@ app.use(
   })
 );
 
-// Initialize Passport // google login authentication
+// Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -147,21 +174,6 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-app.get('/auth/google',passport.authenticate('google',{scope:['profile','email'],
-  prompt:'select_account',
-}));
-
-
-
-app.get('/auth/google/callback',passport.authenticate('google',{
-  failureRedirect:`${process.env.FRONTEND_URL}/login`,
-}),
-(req,res) => {
-  // Successful authentication, redirect home.
-  res.redirect(`${process.env.FRONTEND_URL}`);
-}
-);
-
 // ==========================================
 // 📊 CALL AI FUNCTION
 // ==========================================
@@ -169,9 +181,8 @@ app.get('/auth/google/callback',passport.authenticate('google',{
 async function callAI(systemPrompt, userPrompt) {
   try {
     if (AI_PROVIDER === 'openai' || AI_PROVIDER === 'openrouter') {
-      // Fix: Replace prohibited 'gemini-1.5-flash' model with a recommended alternative.
       const modelName =
-        AI_PROVIDER === 'openrouter' ? 'google/gemini-2.5-flash' : 'gpt-4o';
+        AI_PROVIDER === 'openrouter' ? 'google/gemini-1.5-flash' : 'gpt-4o';
 
       console.log(`🤖 Calling ${modelName}`);
 
@@ -190,14 +201,11 @@ async function callAI(systemPrompt, userPrompt) {
     if (AI_PROVIDER === 'gemini') {
       console.log('🤖 Calling Google Gemini...');
 
-      const response = await aiClient.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: userPrompt,
-        config: {
-          systemInstruction: systemPrompt,
-        }
-      });
-      return response.text;
+      const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+      const result = await geminiModel.generateContent(fullPrompt);
+      const response = result.response;
+
+      return response.text();
     }
 
     throw new Error('Invalid AI provider specified');
@@ -220,14 +228,6 @@ async function callAI(systemPrompt, userPrompt) {
 app.get('/', (req, res) => {
   res.send(" Server running and API Working");
 });
-
-
-// Testing
-
-// app.get('/register', (req, res) => {
-//   res.status(200).send(" Hello Kirtiman");
-// });
-
 
 // Auth routes
 app.use('/api/auth', router);
@@ -399,4 +399,3 @@ app.listen(PORT, () => {
   );
   console.log('🚀=================================🚀');
 });
-export default app;
