@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const HeroIllustration: React.FC = () => (
+export const HeroIllustration = () => (
 <svg viewBox="0 0 512 341" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="hero-grad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -66,7 +66,7 @@ export const HeroIllustration: React.FC = () => (
 </svg>
 );
 
-export const MissionIllustration: React.FC = () => (
+export const MissionIllustration = () => (
 <svg viewBox="0 0 512 341" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="mission-grad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -92,8 +92,8 @@ export const MissionIllustration: React.FC = () => (
     <path d="M-10 250 C 200 180, 300 300, 520 150" stroke="url(#mission-grad2)" strokeWidth="1" opacity="0.2" />
 
     {/* Platforms representing the chasm */}
-    <path d="M0 200 L 150 220 L 150 341 L 0 341 Z" className="fill-slate-200 dark:fill-slate-800" />
-    <path d="M512 180 L 362 160 L 362 341 L 512 341 Z" className="fill-slate-200 dark:fill-slate-800" />
+    <path d="M0 200 L 150 220 L 150 341 L 0 341 Z" className="fill-slate-200 dark:fill-slate-700" />
+    <path d="M512 180 L 362 160 L 362 341 L 512 341 Z" className="fill-slate-200 dark:fill-slate-700" />
     
     {/* Stylized human figure */}
     <g transform="translate(100, 165)">
@@ -129,7 +129,7 @@ export const MissionIllustration: React.FC = () => (
 );
 
 
-export const AuthIllustration: React.FC = () => (
+export const AuthIllustration = () => (
 <svg viewBox="0 0 512 341" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -150,7 +150,7 @@ export const AuthIllustration: React.FC = () => (
   </defs>
   <g fill="none" fillRule="evenodd">
     {/* Base Background */}
-    <rect className="fill-slate-100 dark:fill-slate-950" width="512" height="341" rx="20" />
+    <rect className="fill-slate-100 dark:fill-slate-800" width="512" height="341" rx="20" />
     
     {/* Abstract Shapes */}
     <path d="M450,50 Q500,150 400,250 T250,300" stroke="url(#grad2)" strokeWidth="2" className="opacity-50" />
@@ -158,7 +158,7 @@ export const AuthIllustration: React.FC = () => (
     
     {/* Main Document Shape */}
     <g transform="translate(120, 40) rotate(-5, 136, 131)">
-      <rect className="fill-white dark:fill-slate-800 stroke-slate-200 dark:stroke-slate-700" strokeWidth="2" x="0" y="0" width="272" height="262" rx="12" />
+      <rect className="fill-white dark:fill-slate-700 stroke-slate-200 dark:stroke-slate-600" strokeWidth="2" x="0" y="0" width="272" height="262" rx="12" />
       <rect fill="url(#grad1)" x="20" y="25" width="232" height="12" rx="6" />
       
       <rect className="fill-slate-200 dark:fill-slate-600" x="20" y="55" width="180" height="8" rx="4" />
@@ -174,7 +174,7 @@ export const AuthIllustration: React.FC = () => (
 
     {/* Floating UI Elements */}
     <g transform="translate(330, 180)">
-       <rect className="fill-white dark:fill-slate-800 stroke-slate-200 dark:stroke-slate-700" strokeWidth="2" x="0" y="0" width="150" height="110" rx="12" filter="url(#glow)" />
+       <rect className="fill-white dark:fill-slate-700 stroke-slate-200 dark:stroke-slate-600" strokeWidth="2" x="0" y="0" width="150" height="110" rx="12" filter="url(#glow)" />
        <circle fill="#10b981" cx="30" cy="30" r="10" />
        <rect className="fill-slate-200 dark:fill-slate-600" x="50" y="26" width="70" height="8" rx="4" />
        <circle fill="#f59e0b" cx="30" cy="60" r="10" />
@@ -183,7 +183,7 @@ export const AuthIllustration: React.FC = () => (
     </g>
 
     <g transform="translate(50, 80)">
-       <rect className="fill-white dark:fill-slate-800 stroke-slate-200 dark:stroke-slate-700" strokeWidth="2" x="0" y="0" width="120" height="70" rx="12" filter="url(#glow)" />
+       <rect className="fill-white dark:fill-slate-700 stroke-slate-200 dark:stroke-slate-600" strokeWidth="2" x="0" y="0" width="120" height="70" rx="12" filter="url(#glow)" />
        <path d="M20 25 L 50 45 L 100 20" stroke="#06b6d4" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
     </g>
 
@@ -192,6 +192,40 @@ export const AuthIllustration: React.FC = () => (
     <path d="M80 280 L 83 290 L 86 280 L 83 270 Z" className="fill-blue-400 opacity-80" />
     <circle cx="430" cy="150" r="5" className="fill-cyan-300 opacity-70" />
     <circle cx="120" cy="50" r="7" className="fill-blue-300 opacity-70" />
+  </g>
+</svg>
+);
+
+export const ContactIllustration = () => (
+<svg viewBox="0 0 512 341" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="contact-grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#06b6d4" />
+      <stop offset="100%" stopColor="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="contact-grad2" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stopColor="#67e8f9" />
+      <stop offset="100%" stopColor="#60a5fa" />
+    </linearGradient>
+    <filter id="contact-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <g fill="none" fillRule="evenodd">
+    <circle cx="256" cy="170" r="180" fill="url(#contact-grad2)" opacity="0.1" filter="url(#contact-glow)" />
+    <g transform="translate(156, 90) rotate(-15, 100, 80)">
+      <path d="M0 70 L200 0 L80 160 L100 90 Z" className="fill-white/80 dark:fill-slate-800/80" />
+      <path d="M0 70 L200 0 L100 90 Z" fill="url(#contact-grad1)" opacity="0.8" />
+      <path d="M80 160 L200 0 L100 90 Z" fill="url(#contact-grad2)" opacity="0.6" />
+    </g>
+    <circle cx="100" cy="250" r="15" stroke="url(#contact-grad1)" strokeWidth="3" opacity="0.7"/>
+    <path d="M400 50 L420 70 L400 90" stroke="url(#contact-grad2)" strokeWidth="4" strokeLinecap="round" opacity="0.8" />
+    <rect x="80" y="50" width="20" height="20" rx="5" className="fill-cyan-400 opacity-60" transform="rotate(30, 90, 60)" />
+    <path d="M450 280 C 420 260, 400 300, 370 280" stroke="url(#contact-grad1)" strokeWidth="2" opacity="0.5" />
   </g>
 </svg>
 );
